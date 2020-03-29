@@ -131,10 +131,14 @@ def write_to_stdout(data, filename=''):
                                              'DIASTOLE', 'PULSE'))
     print('-'*50)
     for m_id, measurement in data.items():
-        date = datetime.datetime(int(measurement['year']), int(measurement['month']), int(measurement['day']),
+        try:
+            date = datetime.datetime(int(measurement['year']), int(measurement['month']), int(measurement['day']),
                                  int(measurement['hour']), int(measurement['minute']))
-        measurement.update({'date': str(date)})
-        print('{date:^20} | {systole:^7} | {diastole:^8} | {pulse:^5}'.format(**measurement))
+            measurement.update({'date': str(date)})
+            print('{date:^20} | {systole:^7} | {diastole:^8} | {pulse:^5}'.format(**measurement))
+        except:
+            measurement.update({'date': '-'})
+            print('{date:^20} | {systole:^7} | {diastole:^8} | {pulse:^5}'.format(**measurement))
 
 def write_to_sqlite(data, filename):
     """write data to sqlite database
@@ -150,12 +154,15 @@ def write_to_sqlite(data, filename):
                          (date text PRIMARY KEY, systole text, diastole text, pulse text)''')
 
     for m_id, measurement in data.items():
-        date = datetime.datetime(int(measurement['year']), int(measurement['month']), int(measurement['day']),
+        try:
+            date = datetime.datetime(int(measurement['year']), int(measurement['month']), int(measurement['day']),
                                  int(measurement['hour']), int(measurement['minute']))
-        measurement.update({'date': str(date)})
-        LOGGER.debug('writing {date} - sys: {systole} dia: {diastole} pul: {pulse}'.format(**measurement))
-        # Insert a row of data
-        cursor.execute("INSERT OR IGNORE INTO measures VALUES ('{date}', {systole}, {diastole}, {pulse})".format(**measurement))
+            measurement.update({'date': str(date)})
+            LOGGER.debug('writing {date} - sys: {systole} dia: {diastole} pul: {pulse}'.format(**measurement))
+            # Insert a row of data
+            cursor.execute("INSERT OR IGNORE INTO measures VALUES ('{date}', {systole}, {diastole}, {pulse})".format(**measurement))
+        except:
+            LOGGER.error('data error occord.'+measurement.tostring())
 
     # Save (commit) the changes
     conn.commit()
